@@ -25,6 +25,17 @@ app.post('/api/auth', async (req, res) => {
   res.json({ success: true, token: Buffer.from(password + ':' + Date.now()).toString('base64') });
 });
 
+async function verifyAdmin(req, res, next) {
+  const password = req.headers['x-admin-password'] || req.headers.authorization?.replace('Bearer ', '');
+  
+  if (!password) return res.status(401).json({ error: 'Unauthorized' });
+  
+  const valid = await bcrypt.compare(password, ADMIN_PASSWORD_HASH);
+  if (!valid) return res.status(401).json({ error: 'Unauthorized' });
+  
+  next();
+}
+
 app.get('/api/pets', async (req, res) => {
   const { data, error } = await supabase
     .from('pets')
